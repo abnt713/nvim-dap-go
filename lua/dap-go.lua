@@ -67,41 +67,51 @@ local function setup_go_adapter(dap)
   end
 end
 
+local function with_buildtags(cfg)
+  local buildtags = vim.g.nvim_dap_go_buildtags
+  if buildtags == nil then
+    return cfg
+  end
+
+  cfg['buildFlags'] = '-tags=' .. buildtags
+  return cfg
+end
+
 local function setup_go_configuration(dap)
   dap.configurations.go = {
-    {
+    with_buildtags({
       type = "go",
       name = "Debug",
       request = "launch",
       program = "${file}",
-    },
-    {
+    }),
+    with_buildtags({
       type = "go",
       name = "Debug Package",
       request = "launch",
       program = "${fileDirname}",
-    },
-    {
+    }),
+    with_buildtags({
       type = "go",
       name = "Attach",
       mode = "local",
       request = "attach",
       processId = require('dap.utils').pick_process,
-    },
-    {
+    }),
+    with_buildtags({
       type = "go",
       name = "Debug test",
       request = "launch",
       mode = "test",
       program = "${file}",
-    },
-    {
+    }),
+    with_buildtags({
       type = "go",
       name = "Debug test (go.mod)",
       request = "launch",
       mode = "test",
       program = "./${relativeFileDirname}",
-    }
+    })
   }
 end
 
@@ -113,14 +123,14 @@ end
 
 local function debug_test(testname)
   local dap = load_module("dap")
-  dap.run({
+  dap.run(with_buildtags({
       type = "go",
       name = testname,
       request = "launch",
       mode = "test",
       program = "./${relativeFileDirname}",
       args = {"-test.run", testname},
-  })
+  }))
 end
 
 local function get_closest_above_cursor(test_tree)
